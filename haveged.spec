@@ -1,21 +1,20 @@
 Summary:	A Linux entropy source using the HAVEGE algorithm
 Name:		haveged
-Version:	1.9.1
-Release:	0.1
+Version:	1.9.6
+Release:	1
 License:	GPL v3+
 Group:		Daemons
-Source0:	http://www.issihosts.com/haveged/%{name}-%{version}.tar.gz
-# Source0-md5:	015ff58cd10607db0e0de60aeca2f5f8
+Source0:	https://github.com/jirka-h/haveged/archive/v%{version}.tar.gz
+# Source0-md5:	445ebbe0ecce01de06847689e9822efd
+Patch0:		%{name}-link.patch
 URL:		http://www.irisa.fr/caps/projects/hipsor/
-#Source1:	%{name}.service
+BuildRequires:	autoconf >= 2.59
 BuildRequires:	automake
-BuildRequires:	gdb
-BuildRequires:	systemd-units
-%if 0
-Requires(post):	systemd
-Requires(preun):	systemd
-Requires(postun):	systemd
-%endif
+BuildRequires:	libtool
+BuildRequires:	rpmbuild(macros) >= 1.644
+BuildRequires:	systemd-devel
+Requires(post,preun,postun):	systemd-units >= 38
+Requires:	systemd-units >= 38
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
@@ -53,22 +52,23 @@ Headers and shared object symbolic links for the HAVEGE algorithm
 
 %prep
 %setup -q
+%patch0 -p1
 
 %build
-#autoreconf -fiv
+%{__libtoolize}
+%{__aclocal}
+%{__autoconf}
+%{__autoheader}
+%{__automake}
 %configure \
-	--disable-static
+	--disable-static \
+	--enable-init=service.fedora
 # SMP build is not working
 %{__make} -j1
-
-%if %{with tests}
-%{__make} check
-%endif
 
 %install
 rm -rf $RPM_BUILD_ROOT
 %{__make} install \
-	INSTALL="install -p" \
 	DESTDIR=$RPM_BUILD_ROOT
 
 install -d $RPM_BUILD_ROOT%{systemdunitdir}
@@ -83,7 +83,6 @@ rm -rf $RPM_BUILD_ROOT
 %post	libs -p /sbin/ldconfig
 %postun	libs -p /sbin/ldconfig
 
-%if 0
 %post
 %systemd_post haveged.service
 
@@ -91,15 +90,14 @@ rm -rf $RPM_BUILD_ROOT
 %systemd_preun haveged.service
 
 %postun
-%systemd_postun_with_restart haveged.service
-%endif
+%systemd_reload
 
 %files
 %defattr(644,root,root,755)
-%doc COPYING README ChangeLog AUTHORS contrib/build/havege_sample.c
+%doc AUTHORS ChangeLog NEWS README contrib/build/havege_sample.c
 %attr(755,root,root) %{_sbindir}/haveged
 %{_mandir}/man8/haveged.8*
-#%{systemdunitdir}/haveged.service
+%{systemdunitdir}/haveged.service
 
 %files libs
 %defattr(644,root,root,755)
