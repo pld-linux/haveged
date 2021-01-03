@@ -1,11 +1,11 @@
 Summary:	A Linux entropy source using the HAVEGE algorithm
 Name:		haveged
-Version:	1.9.13
+Version:	1.9.14
 Release:	1
 License:	GPL v3+
 Group:		Daemons
 Source0:	https://github.com/jirka-h/haveged/archive/v%{version}.tar.gz
-# Source0-md5:	5391978794208b6cca6f53d7a6211c04
+# Source0-md5:	f756474201bec9a46b41e8712f79468a
 URL:		http://www.irisa.fr/caps/projects/hipsor/
 BuildRequires:	autoconf >= 2.59
 BuildRequires:	automake
