@@ -1,11 +1,11 @@
 Summary:	A Linux entropy source using the HAVEGE algorithm
 Name:		haveged
-Version:	1.9.14
+Version:	1.9.15
 Release:	1
 License:	GPL v3+
 Group:		Daemons
 Source0:	https://github.com/jirka-h/haveged/archive/v%{version}.tar.gz
-# Source0-md5:	f756474201bec9a46b41e8712f79468a
+# Source0-md5:	9298cbdfb37ab84bdb710f042373a354
 URL:		http://www.irisa.fr/caps/projects/hipsor/
 BuildRequires:	autoconf >= 2.59
 BuildRequires:	automake
@@ -59,8 +59,7 @@ Headers and shared object symbolic links for the HAVEGE algorithm
 %{__autoheader}
 %{__automake}
 %configure \
-	--disable-static \
-	--enable-init=service.fedora
+	--disable-static
 # SMP build is not working
 %{__make} -j1
 
@@ -70,7 +69,7 @@ rm -rf $RPM_BUILD_ROOT
 	DESTDIR=$RPM_BUILD_ROOT
 
 install -d $RPM_BUILD_ROOT%{systemdunitdir}
-#cp -p %{SOURCE1} $RPM_BUILD_ROOT%{systemdunitdir}/haveged.service
+cp -p contrib/Fedora/haveged.service $RPM_BUILD_ROOT%{systemdunitdir}/haveged.service
 
 # We don't ship .la files.
 rm $RPM_BUILD_ROOT%{_libdir}/libhavege.la
