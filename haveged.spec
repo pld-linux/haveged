@@ -1,7 +1,7 @@
 Summary:	A Linux entropy source using the HAVEGE algorithm
 Name:		haveged
 Version:	1.9.15
-Release:	1
+Release:	2
 License:	GPL v3+
 Group:		Daemons
 Source0:	https://github.com/jirka-h/haveged/archive/v%{version}.tar.gz
@@ -69,7 +69,7 @@ rm -rf $RPM_BUILD_ROOT
 	DESTDIR=$RPM_BUILD_ROOT
 
 install -d $RPM_BUILD_ROOT%{systemdunitdir}
-cp -p contrib/Fedora/haveged.service $RPM_BUILD_ROOT%{systemdunitdir}/haveged.service
+sed -e 's:@SBIN_DIR@:%{_sbindir}:g' contrib/Fedora/*service > $RPM_BUILD_ROOT%{systemdunitdir}/haveged.service
 
 # We don't ship .la files.
 rm $RPM_BUILD_ROOT%{_libdir}/libhavege.la
