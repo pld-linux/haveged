@@ -1,0 +1,91 @@
+#!/bin/sh
+
+# haveged:   entropy daemon
+#
+# chkconfig: - 19 81
+# description:  havege entropy daemon
+#
+# processname: haveged
+#
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+# Source config
+if [ -f /etc/sysconfig/haveged ] ; then
+	. /etc/sysconfig/haveged
+fi
+
+start() {
+        if [ -f /var/lock/subsys/haveged ]; then
+		msg_already_running "haveged"
+		return
+	fi
+
+	umask 077
+	msg_starting "haveged"
+	daemon /usr/sbin/haveged -w 1024 -v 1
+	RETVAL=$?
+	[ $RETVAL -eq 0 ] && touch /var/lock/subsys/haveged
+}
+
+stop() {
+	if [ ! -f /var/lock/subsys/haveged ]; then
+		msg_not_running "haveged"
+		return
+	fi
+
+	msg_stopping "haveged"
+	killproc haveged
+	rm -f /var/lock/subsys/haveged
+}
+
+
+reload() {
+	if [ ! -f /var/lock/subsys/haveged ]; then
+		msg_not_running "haveged"
+		RETVAL=7
+		return
+	fi
+
+	msg_reloading haveged
+	killproc haveged -HUP
+	RETVAL=$?
+}
+
+condrestart() {
+	if [ ! -f /var/lock/subsys/haveged ]; then
+		msg_not_running "haveged"
+		RETVAL=$1
+		return
+	fi
+	stop
+	start
+}
+
+# See how we were called.
+case "$1" in
+  start)
+	start
+	;;
+  stop)
+	stop
+	;;
+  restart)
+	stop
+	start
+	;;
+  try-restart)
+	condrestart 0
+	;;
+  reload|force-reload)
+	reload
+	;;
+  status)
+	status --pidfile /var/run/haveged.pid haveged
+	;;
+  *)
+	msg_usage "$0 {start|stop|restart|try-restart|reload|force-reload|status}"
+	exit 3
+esac
+exit $RETVAL
