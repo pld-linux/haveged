@@ -1,3 +1,4 @@
+%bcond_without	systemd	# build without systemd
 Summary:	A Linux entropy source using the HAVEGE algorithm
 Name:		haveged
 Version:	1.9.15
@@ -6,12 +7,13 @@ License:	GPL v3+
 Group:		Daemons
 Source0:	https://github.com/jirka-h/haveged/archive/v%{version}.tar.gz
 # Source0-md5:	9298cbdfb37ab84bdb710f042373a354
+Source1:	%{name}.init
 URL:		http://www.irisa.fr/caps/projects/hipsor/
 BuildRequires:	autoconf >= 2.59
 BuildRequires:	automake
 BuildRequires:	libtool
 BuildRequires:	rpmbuild(macros) >= 1.644
-BuildRequires:	systemd-devel
+%{?with_systemd:BuildRequires:	systemd-devel}
 Requires(post,preun,postun):	systemd-units >= 38
 Requires:	systemd-units >= 38
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
@@ -71,6 +73,9 @@ rm -rf $RPM_BUILD_ROOT
 install -d $RPM_BUILD_ROOT%{systemdunitdir}
 sed -e 's:@SBIN_DIR@:%{_sbindir}:g' contrib/Fedora/haveged.service > $RPM_BUILD_ROOT%{systemdunitdir}/haveged.service
 
+install -d $RPM_BUILD_ROOT/etc/rc.d/init.d
+install -p %{SOURCE1} $RPM_BUILD_ROOT/etc/rc.d/init.d/haveged
+
 # We don't ship .la files.
 rm $RPM_BUILD_ROOT%{_libdir}/libhavege.la
 
@@ -81,9 +86,15 @@ rm -rf $RPM_BUILD_ROOT
 %postun	libs -p /sbin/ldconfig
 
 %post
+/sbin/chkconfig --add haveged
+%service haveged restart
 %systemd_post haveged.service
 
 %preun
+if [ "$1" = "0" ]; then
+	%service haveged stop
+	/sbin/chkconfig --del haveged
+fi
 %systemd_preun haveged.service
 
 %postun
@@ -92,6 +103,7 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(644,root,root,755)
 %doc AUTHORS ChangeLog NEWS README contrib/build/havege_sample.c
+%attr(754,root,root) /etc/rc.d/init.d/haveged
 %attr(755,root,root) %{_sbindir}/haveged
 %{_mandir}/man8/haveged.8*
 %{systemdunitdir}/haveged.service
